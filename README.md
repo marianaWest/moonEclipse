@@ -1,3 +1,5 @@
+![moon](https://user-images.githubusercontent.com/97693233/227187809-4df24087-5516-425b-af14-b9708da2b7df.gif)
+
 # moonEclipse
 Generate random images through a moon-shaped filter
 
