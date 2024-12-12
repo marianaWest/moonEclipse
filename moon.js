@@ -5,12 +5,14 @@ const settings = {
   dimensions: [1080, 1080],
 };
 
-let manager, image;
+let manager;
 let loadMeSomeImage;
 const url = "https://picsum.photos/1000";
 
 const typeCanvas = document.createElement("canvas");
 const typeContext = typeCanvas.getContext("2d");
+
+let currentImage = null;
 
 const sketch = ({ context, width, height }) => {
   // for map of pixels
@@ -23,10 +25,13 @@ const sketch = ({ context, width, height }) => {
   typeCanvas.height = rows;
 
   return ({ context, width, height }) => {
+    if (!currentImage) return;
+
+    context.fillStyle = "black";
     context.fillRect(0, 0, cols, rows);
 
     typeContext.save();
-    typeContext.drawImage(image, 0, 0, cols, rows);
+    typeContext.drawImage(currentImage, 0, 0, cols, rows);
     typeContext.restore();
 
     const typeData = typeContext.getImageData(0, 0, cols, rows).data;
@@ -59,7 +64,9 @@ const sketch = ({ context, width, height }) => {
       context.fill();
 
       context.restore();
+      context.fillSyle = "black";
     }
+    // this line draws the image obtained from picsum on the top left corner
     // context.drawImage(typeCanvas, 0, 0);
   };
 };
@@ -69,15 +76,36 @@ loadMeSomeImage = (url) => {
     const img = new Image();
     img.crossOrigin = "Anonymous";
     img.onload = () => resolve(img);
-    img.onerror = () => reject();
+    img.onerror = () => reject(new Error("Failed to load image"));
     img.src = url;
   });
 };
 
 const start = async () => {
-  const url = "https://picsum.photos/1000";
-  image = await loadMeSomeImage(url);
-  manager = await canvasSketch(sketch, settings);
+  try {
+    if (currentImage) {
+      context.fillStyle = "black";
+      await manager.unload();
+    }
+    // Load a new image
+    currentImage = await loadMeSomeImage(url);
+    // Clear the previous sketch
+    if (manager) {
+      await manager.unload();
+    }
+
+    // Start a new sketch with the updated settings
+    manager = await canvasSketch(sketch, settings);
+  } catch (err) {
+    console.error("Error loading image or starting sketch:", err);
+  }
 };
 
+// Run the `start` function every 2 seconds to fetch a new image
+// not working
+setInterval(() => {
+  start();
+}, 2000);
+
+// Start the first sketch
 start();
